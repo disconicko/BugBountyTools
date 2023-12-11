@@ -1,22 +1,50 @@
 #!/bin/bash
-#Global variables
-targetName=$(basename "$(pwd)")
-target=$(basename "$targetDirectory")
-originalScope="$targetDirectory/originalScope.txt"
-wildcards="$targetDirectory/wildcards.txt"
-subdomains="$targetDirectory/subdomains.txt"
-hosts="$targetDirectory/hosts.txt"
-newSubdomains="$targetDirectory/newSubdomains.txt"
-newHosts="$targetDirectory/newHosts.txt"
+main() {
+    while getopts ":d:m:" option; do
+        case $option in
+            d)
+                targetDirectory=$OPTARG
+            ;;
+            m)
+                mode=$OPTARG
+            ;;
+            *)
+                echo "Usage: $0 [-d directory] [-m mode]"
+                echo "Modes: enumerate, monitor"
+                exit 1
+            ;;
+        esac
+    done
 
-main(){
-    echo "Starting Monitor on $targetName"
+    # Initialize variables after capturing targetDirectory
+    initializeVariables
 
-    #Empty the files below
+    if [[ "$mode" == "enumerate" ]]
+    then
+        enumerate
+    fi
+    if [[ "$mode" == "monitor" ]]
+    then
+        monitor 
+    fi
+}
+
+initializeVariables() {
+    target=$(basename "$targetDirectory")
+    originalScope="$targetDirectory/originalScope.txt"
+    wildcards="$targetDirectory/wildcards.txt"
+    subdomains="$targetDirectory/subdomains.txt"
+    hosts="$targetDirectory/hosts.txt"
+    newSubdomains="$targetDirectory/newSubdomains.txt"
+    newHosts="$targetDirectory/newHosts.txt"
+    vulnerabilities="$targetDirectory/vulnerabilities.txt"
+}
+
+monitor(){
+    echo "Starting Monitor on $target"
     > "$newSubdomains"
     > "$newHosts"
-    > "$vulnerabilties"
-
+    > "$vulnerabilities"
     nuclei -ut -silent
     enumSubdomains
     httpResolve
@@ -24,7 +52,20 @@ main(){
     cleanFiles
     nucleiScan
     notifyBot
-    echo "Finished Monitor on $targetName"
+    echo "Finished Monitor on $target"
+}
+
+enumerate(){
+    echo "Starting Enumerate on $target"
+    cat $originalScope | anew $wildcards
+    echo "" > "$newSubdomains"
+    echo "" > "$newHosts"
+    echo "" > "$vulnerabilties"
+    enumSubdomains
+    httpResolve
+    enumSSLNames
+    cleanFiles
+    echo "Finished Enumerate on $target"
 }
 
 #updateTemplates
@@ -34,7 +75,7 @@ nucleiUpdate(){
 
 #performs subdomain enumeration on the wildcards
 enumSubdomains(){
-    echo "Starting Subdomain Enumeration on $targetName"
+    echo "Starting Subdomain Enumeration on $target"
     while IFS= read -r wildcard; do
       subfinder -d $wildcard -silent | grep -v '[@*:]' | grep "\.$wildcard" | anew $subdomains | anew $newSubdomains
       amass enum -d $wildcard -passive -silent | grep -v '[@*:]' | grep "\.$wildcard" | anew $subdomains | anew $newSubdomains
@@ -44,13 +85,13 @@ enumSubdomains(){
 
 #Runs http probe on targets. May need to eventually to full port scans to find high port http pages
 httpResolve(){
-    echo "Starting Http Resolve on $targetName"
+    echo "Starting Http Resolve on $target"
     cat "$subdomains" | httprobe -c 20 --prefer-https | anew "$hosts" | anew "$newHosts"
 }
 
 #Searches SSL certs for subdomains and wildcards
 enumSSLNames(){
-    echo "Starting SSL Cert Enumeration on $targetName"
+    echo "Starting SSL Cert Enumeration on $target"
     nuclei -l $hosts -t ssl/ssl-dns-names.yaml -silent | \
       grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | grep -v '[*@:]' | grep -v '^\.' | anew $subdomains 1>/dev/null
 
@@ -60,21 +101,25 @@ enumSSLNames(){
 
 #Runs nuclei scans on http resolved targets
 nucleiScan(){
-    echo "Starting Nuclei Scans on $targetNam"
+    echo "Starting Nuclei Scans on $target"
     nuclei -l "$newSubdomains" -severity low,medium,high,critical -silent | anew $vulnerabilities
     nuclei -l "$newHosts" -severity low,medium,high,critical -silent | anew $vulnerabilities
 }
 
 #Sends Discord messages whenever new subdomains, hosts or vulnerabilities are found.
 notifyBot(){
-    if [$(wc -l <"${newsubDomains}") != 0]; then
+    if [ $(wc -l < "${newsubDomains}") != 0 ]
+    then
         cat "${newSubdomains}" | notify -silent -id subdomain
-
-    if [$(wc -l <"${newHosts}") != 0]; then
+    fi
+    if [$(wc -l <"${newHosts}") != 0]
+    then
         cat "${newHosts}" | notify -silent -id resolve
-
-    if [$(wc -l <"${vulnerabilities}") != 0]; then
+    fi
+    if [$(wc -l <"${vulnerabilities}") != 0] 
+    then
         cat "${vulnerabilties}" | notify -silent -id nuclei
+    fi
 }
 
 #Removes any unwanted/out-of-scope domains from the file
@@ -126,4 +171,4 @@ cleanFiles(){
     done
 }
 
-main
+main "$@"
