@@ -58,9 +58,9 @@ monitor(){
 enumerate(){
     echo "Starting Enumerate on $target"
     cat $originalScope | anew $wildcards
-    echo "" > "$newSubdomains"
-    echo "" > "$newHosts"
-    echo "" > "$vulnerabilties"
+    > "$newSubdomains"
+    > "$newHosts"
+    > "$vulnerabilities"
     enumSubdomains
     httpResolve
     enumSSLNames
@@ -107,20 +107,18 @@ nucleiScan(){
 }
 
 #Sends Discord messages whenever new subdomains, hosts or vulnerabilities are found.
-notifyBot(){
-    if [ $(wc -l < "${newsubDomains}") != 0 ]
-    then
+notifyBot() {
+    if [ $(wc -l < "${newSubdomains}") != 0 ]; then
         cat "${newSubdomains}" | notify -silent -id subdomain
     fi
-    if [$(wc -l <"${newHosts}") != 0]
-    then
+    if [ $(wc -l < "${newHosts}") != 0 ]; then
         cat "${newHosts}" | notify -silent -id resolve
     fi
-    if [$(wc -l <"${vulnerabilities}") != 0] 
-    then
-        cat "${vulnerabilties}" | notify -silent -id nuclei
+    if [ $(wc -l < "${vulnerabilities}") != 0 ]; then
+        cat "${vulnerabilities}" | notify -silent -id nuclei
     fi
 }
+
 
 #Removes any unwanted/out-of-scope domains from the file
 cleanFiles(){
@@ -169,6 +167,10 @@ cleanFiles(){
     for host in "${cleanedHosts[@]}"; do
         echo "$host" >> "$hosts"
     done
+
+    rm $newHosts
+    rm $newSubdomains
+    rm $vulnerabilities
 }
 
 main "$@"
