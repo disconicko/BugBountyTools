@@ -1,0 +1,50 @@
+[
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "This regex is designed to discover debug pages and error pages containing stack traces, errors etc. ", 
+        "regex": [
+            "(Application-Trace|Routing Error|DEBUG\"? ?[=:] ?True|Caused by:|stack trace:|Microsoft .NET Framework|Traceback|[0-9]:in `|#!/us|WebApplicationException|java\\.lang\\.|phpinfo|swaggerUi|on line [0-9]|SQLSTATE)"
+        ], 
+        "name": "Debug Page"
+    }, 
+    {
+        "severity": "High", 
+        "active": false, 
+        "description": "This regex is designed to discover private keys such as RSA, PGP, EC, etc. All credit goes to Dwisiswan0.\nThe Github for the GF templates can be found below:\nhttps://github.com/dwisiswant0/gf-secrets/blob/master/.gf/", 
+        "regex": [
+            "-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----"
+        ], 
+        "name": "Asymmetric Key Secrets"
+    }, 
+    {
+        "severity": "Low", 
+        "active": true, 
+        "description": "This regex is designed to discover potentially vulnerable sinks. This will generate a lot of issues, it is recommended to only use this on specific files.", 
+        "regex": [
+            "[^a-z0-9_](system|exec|popen|pcntl_exec|eval|create_function|unserialize|file_exists|md5_file|filemtime|filesize|assert) ?\\("
+        ], 
+        "name": "Potentially Vulnerable Sinks"
+    }, 
+    {
+        "severity": "Medium", 
+        "active": true, 
+        "description": "This regex is designed to discover AWS secret Keys. All credit goes to Dwisiswan0.\nThe Github for the GF templates can be found below:\nhttps://github.com/dwisiswant0/gf-secrets/blob/master/.gf/", 
+        "regex": [
+            "([^A-Z0-9]|^)(AKIA|A3T|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{12,}"
+        ], 
+        "name": "AWS Key Secrets"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "This regex is designed to discover AWS S3 instances/buckets. All credit goes to Dwisiswan0.\nThe Github for the GF templates can be found below:\nhttps://github.com/dwisiswant0/gf-secrets/blob/master/.gf/", 
+        "regex": [
+            "[a-z0-9.-]+\\.(?:s3\\.|s3-[a-z0-9-]+\\.)amazonaws\\.com", 
+            "[a-z0-9.-]+\\.s3-website[.-](?:eu|ap|us|ca|sa|cn)", 
+            "//s3\\.amazonaws\\.com/[a-z0-9._-]+", 
+            "//s3-[a-z0-9-]+\\.amazonaws\\.com/[a-z0-9._-]+"
+        ], 
+        "name": "AWS S3 Secrets"
+    }
+]
