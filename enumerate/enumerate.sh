@@ -1,7 +1,9 @@
 #!/bin/bash
 
+#TODO Add Proxy
 #TODO Port scan
-#TODO Vuln scan with nuclei and nikto
+#TODO Vuln scan with nikto
+#TODO add github-subdomains.py for OSINT subdomains
 
 main () {
     while getopts ':a:c:m:' flag; do
@@ -22,7 +24,7 @@ main () {
     asnEnum
     subdomainEnum
     httpResolve
-    portScan
+    #portScan
     nucleiScan
     iisDiscovery
 }
@@ -78,13 +80,15 @@ subdomainEnum(){
         amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
     done < $topLevelDomains
 
-    if [[ $mode == "active" ]]; then
-        echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
-        while IFS= read -r domain; do
+    #Taking too long. Find a way to reduce requests.
+    #Might need to do the cert lookups manually with nuclei.
+    #if [[ $mode == "active" ]]; then
+    #    echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
+    #    while IFS= read -r domain; do
             #This command takes a long time to run
-            amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        done < $topLevelDomains
-    fi
+    #        amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+    #    done < $topLevelDomains
+    #fi
 }
 
 httpResolve(){
@@ -102,8 +106,8 @@ portScan(){
 nucleiScan(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Nuclei Scans on $target $redClose"
-        nuclei -l "$newSubdomains" -rl $rateLimit -silent | anew $vulnerabilities
-        nuclei -l "$newHosts" $rateLimit -silent | anew $vulnerabilities
+        nuclei -l "$subdomains" -severity low,medium,high,critical -rl $rateLimit -silent | anew $vulnerabilities
+        nuclei -l "$hosts" -severity low,medium,high,critical -rl $rateLimit -silent | anew $vulnerabilities
     fi
 }
 
@@ -113,6 +117,7 @@ iisDiscovery(){
         nuclei -l "$hosts" -template "./CustomTemplates/enchanced-iis-discovery.yaml" -rl $rateLimit -silent | anew iisServers.txt
     fi
 }
+
 
 
 main "$@"
