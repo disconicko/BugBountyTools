@@ -1,9 +1,7 @@
 #!/bin/bash
 
-#TODO Add Proxy
+#TODO Add Proxy wrapper
 #TODO Port scan
-#TODO Vuln scan with nikto
-#TODO add github-subdomains.py for OSINT subdomains
 
 main () {
     while getopts ':a:c:m:' flag; do
@@ -21,12 +19,30 @@ main () {
     done
 
     initializeVariables
+
+    # Phase 1 Enumeration
+    echo -e "$redOpen Starting Phase 1 - Enumeration on $target $redClose"
     asnEnum
     subdomainEnum
+    githubEnum
     httpResolve
+    crawl
+    echo -e "$redOpen Finished Phase 1 - Enumeration on $target $redClose"
+    
+    # Phase 2 Information Gathering
+    echo -e "$redOpen Starting Phase 2 - Information Gathering on $target $redClose"
     #portScan
-    nucleiScan
     iisDiscovery
+    echo -e "$redOpen Finished Phase 2 - Information Gathering on $target $redClose"
+
+    # Phase 3 Vulnerability Scanning
+    echo -e "$redOpen Starting Phase 3 - Vulnerability Scanning on $target $redClose"
+    #Nuclei scans are likely to get your IP Banned by Akamai.Find a way to obfuscate scans.
+    #Add check for Akamai IP ban error. 
+    #nucleiScan 
+    #niktoScan
+    echo -e "$redOpen Finished Phase 3 - Vulnerability Scanning on $target $redClose"
+    echo -e "$redOpen Script finished - Happy Hacking $redClose"
 }
 
 print_usage() { 
@@ -48,6 +64,7 @@ initializeVariables(){
     commonports="66,80,81,443,445,457,1080,1100,1241,1352,1433,1434,1521,1944,2301,3000,3128,3306,4000,4001,4002,4100,5000,5432,5800,5801,5802,6346,6347,7001,7002,8000,8080,8443,8888,30821"
     redOpen="\033[31m"
     redClose="\033[0m"
+    gitToken=""
 }
 
 asnEnum() {
@@ -91,9 +108,22 @@ subdomainEnum(){
     #fi
 }
 
+githubEnum(){
+    echo -e "$redOpen Starting Github Scan on $target $redClose"
+    while IFS= read -r domain; do
+        github-subdomains -d $domain -raw -t $gitToken | anew subdomains.txt
+    done
+}
+
 httpResolve(){
     echo -e "$redOpen Starting Http Resolve on $target $redClose"
     cat "$subdomains" | httprobe -c 20 | anew "$hosts" 
+}
+
+crawl(){
+    if [[ $mode == "active" ]]; then
+       cat hosts.txt | hakrawler -insecure -subs -u -d 5 | unfurl format %d | grep -i $target | anew subdomains.txt
+    fi
 }
 
 portScan(){

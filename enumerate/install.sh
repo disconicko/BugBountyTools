@@ -46,5 +46,8 @@ else
     echo "Anew Installation failed."
 fi
 
+#Install github-subdomains
+#TODO
+
 echo "Installation script complete. Check for errors"
 
