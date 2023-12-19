@@ -4,8 +4,9 @@ For more information please see:
 https://github.com/owasp-amass/amass/blob/master/doc/user_guide.md
 
 ## Before Running
-This script requires several tools and a Go installation. If go is not installed, please see: https://go.dev/doc/install
-To install the tools required to run the install.sh script. This will install the following tools:
+This script requires several tools and a Go installation. If Go is not installed, please see: https://go.dev/doc/install
+
+To install the tools required, run the install.sh script. This will install the following tools:
 * Anew
 * Amass
 * Assetfinder
