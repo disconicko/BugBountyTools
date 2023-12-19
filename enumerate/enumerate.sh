@@ -24,7 +24,8 @@ main () {
     asnEnum
     subdomainEnum
     httpResolve
-    portScan
+    #portScan
+    #nuclei Scan
 }
 
 print_usage() { 
@@ -41,6 +42,7 @@ initializeVariables(){
     vulnerabilities="$currentDirectory/vulnerabilities.txt"
 
     # Variables
+    domain="example.com.au"
     rateLimit="100"
     commonports="66,80,81,443,445,457,1080,1100,1241,1352,1433,1434,1521,1944,2301,3000,3128,3306,4000,4001,4002,4100,5000,5432,5800,5801,5802,6346,6347,7001,7002,8000,8080,8443,8888,30821"
     redOpen="\033[31m"
@@ -50,12 +52,12 @@ initializeVariables(){
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
     amass intel -asn $asn 2>/dev/null
-    amass db -names -d bankwest.com.au | anew hosts.txt
+    amass db -names -d $domain | anew hosts.txt
 
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting active ASN enumeration on $target $redClose"
         amass intel -active -asn $asn -p $commonports
-        amass db -names -d bankwest.com.au | anew hosts.txt
+        amass db -names -d $domain | anew hosts.txt
     fi
 
     #Clean TopLevelDomains here
