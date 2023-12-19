@@ -1,0 +1,54 @@
+id: enhanced-iis-detection
+info:
+  name: Detect IIS Server with Extended Indicators (Case-Insensitive) - Nuclei v3 Format
+  author: your_name
+  severity: info
+  description: Checks for common and extended IIS server indicators in the response, regardless of case.
+  tags: iis,detection
+  classification:
+    cvss-metrics: "N/A"
+    cvss-score: 0
+    cve-id: "N/A"
+    cwe-id: "N/A"
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    matchers-condition: or
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "iisstart"
+          - "iis7"
+          - "iis-"
+          - "iis/"
+          - "Welcome to Windows Small Business Server"
+          - "Welcome to Windows Server"
+          - "404 - File or directory not found."
+          - "HTTP Error 403.14 - Forbidden"
+          - "ASP.NET_Version:4.0.30319"
+          - "/owa/"
+          - "/Remote/"
+          - "/ecp/"
+        case-insensitive: true
+
+      - type: regex
+        part: header
+        regex:
+          - "Server: Microsoft-IIS/[0-9.]+"
+
+      - type: word
+        part: header
+        name: X-Powered-By
+        words:
+          - "ASP.NET"
+        case-insensitive: true
+
+      - type: word
+        part: cookie
+        words:
+          - "ASP.NET_SessionId"
+          - "ARRAffinity"
+        case-insensitive: true

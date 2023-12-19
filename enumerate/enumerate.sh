@@ -24,8 +24,9 @@ main () {
     asnEnum
     subdomainEnum
     httpResolve
-    #portScan
-    #nuclei Scan
+    portScan
+    nucleiScan
+    iisDiscovery
 }
 
 print_usage() { 
@@ -52,12 +53,20 @@ initializeVariables(){
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
     amass intel -asn $asn 2>/dev/null
-    amass db -names -d $domain | anew hosts.txt
+
+    if [[ -n ]]
+
+    while IFS= read -r domain; do
+        amass db -names -d $domain | anew $subdomains
+    done < $topLevelDomains
 
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting active ASN enumeration on $target $redClose"
         amass intel -active -asn $asn -p $commonports
-        amass db -names -d $domain | anew hosts.txt
+
+        while IFS= read -r domain; do
+            amass db -names -d $domain | anew $subdomains
+        done < $topLevelDomains
     fi
 
     #Clean TopLevelDomains here
@@ -70,15 +79,14 @@ subdomainEnum(){
         amass enum -d $domain -passive -silent
         amass db -names -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         assetfinder -subs-only $domain -df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        #Test output from this command before adding to script
-        #amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+        amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
     done < $topLevelDomains
-
 
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
         while IFS= read -r domain; do
-            amass enum -active -d $domain -p $commonports -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+            #This command takes a long time to run
+            amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         done < $topLevelDomains
     fi
 }
@@ -90,7 +98,8 @@ httpResolve(){
 
 portScan(){
     if [[ -n $cidr && $mode == "active" ]]; then
-        sudo masscan $cidr -p-
+        echo -e "$redOpen Starting Port on $target $redClose"
+        #sudo masscan $cidr -p-
     fi
 }
 
@@ -101,5 +110,13 @@ nucleiScan(){
         nuclei -l "$newHosts" $rateLimit -silent | anew $vulnerabilities
     fi
 }
+
+iisDiscovery(){
+    if [[ $mode == "active" ]]; then
+        echo -e "$redOpen Starting IIS Discovery on $target $redClose"
+        nuclei -l "$hosts" -template "./CustomTemplates/enchanced-iis-discovery.yaml" -rl $rateLimit -silent | anew iisServers.txt
+    fi
+}
+
 
 main "$@"

@@ -15,6 +15,12 @@ else
     echo "Amass Installation failed."
 fi
 
+#Install Masscan
+#TODO
+
+#Install Nuclei
+#TODO
+
 #Install Tomnomnom tools
 echo "Installing Httprobe"
 go install -v github.com/tomnomnom/httprobe@latest
@@ -41,3 +47,4 @@ else
 fi
 
 echo "Installation script complete. Check for errors"
+

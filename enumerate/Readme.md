@@ -1,5 +1,7 @@
 # Enumerate 
-Enumerate is designed to enumerate targets top-down starting with their ASN number and CIDR ranges.
+Enumerate is designed to enumerate targets top-down starting with their ASN number and CIDR ranges. To get the most out of this tool, please add your API keys to the Amass datasources.yaml file. 
+For more information please see: 
+https://github.com/owasp-amass/amass/blob/master/doc/user_guide.md
 
 ## Before Running
 This script requires several tools and a Go installation. If go is not installed, please see: https://go.dev/doc/install
@@ -9,6 +11,8 @@ To install the tools required to run the install.sh script. This will install th
 * Assetfinder
 * Httprobe
 * Subfinder
+* Masscan
+* Nuclei
 
 If these tools are not working in the command line, ensure that their binaries are in the Go binary path and that the binary path has been added to the $PATH.
 
@@ -34,7 +38,7 @@ The tool uses resources such as Wayback Machine, Whois, DNS Zone Transfers, cert
 
 ## TODO:
 * Add checks against known in-scope top level domains to avoid falling out of scope.
-* Add certificate scraping for subdomains.
+* Add certificate scraping for subdomains. DONE. 
 * Add option to run without CIDR.
 * Add option to run without CIDR or ASN. Will run off known top-level domains. 
 * Add Port scanning. Either Masscan or Nmap (tuned). Need to find a tool with a clean output. All port scans will be rate limited.
