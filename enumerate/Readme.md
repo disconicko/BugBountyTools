@@ -1,8 +1,9 @@
-# Enumerate is designed to enumerate targets top-down starting with their ASN number and CIDR ranges.
+# Enumerate 
+Enumerate is designed to enumerate targets top-down starting with their ASN number and CIDR ranges.
 
 ## Before Running
 This script requires several tools and a Go installation. If go is not installed, please see: https://go.dev/doc/install
-To install the tools required to run the script, run the install.sh script. This will install the following tools:
+To install the tools required to run the install.sh script. This will install the following tools:
 * Anew
 * Amass
 * Assetfinder
