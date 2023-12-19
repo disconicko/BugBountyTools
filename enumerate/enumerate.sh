@@ -1,9 +1,7 @@
 #!/bin/bash
 
-#TODO create install script
-#TODO test active mode
 #TODO Port scan
-#TODO Vuln scan with nuclei and nikto?
+#TODO Vuln scan with nuclei and nikto
 
 main () {
     while getopts ':a:c:m:' flag; do
@@ -53,8 +51,6 @@ initializeVariables(){
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
     amass intel -asn $asn 2>/dev/null
-
-    if [[ -n ]]
 
     while IFS= read -r domain; do
         amass db -names -d $domain | anew $subdomains
