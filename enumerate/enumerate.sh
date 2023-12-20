@@ -25,6 +25,7 @@ main () {
     asnEnum
     subdomainEnum
     githubEnum
+    wayBackUrls
     httpResolve
     crawl
     echo -e "$redOpen Finished Phase 1 - Enumeration on $target $redClose"
@@ -65,14 +66,20 @@ initializeVariables(){
     iisServers="$currentDirectory/InformationGathering/iisServers.txt"
     vulnerabilities="$currentDirectory/VulnerabilityScanning/vulnerabilities.txt"
 
+    # Files for outputting custom wordlists
+    paths="$currentDirectory/InformationGathering/pathsWordlist.txt"
+    variables="$currentDirectory/InformationGathering/variablesWordlist.txt"
+
     # Variables
     rateLimit="100"
-    commonports="66,80,81,443,445,457,1080,1100,1241,1352,1433,1434,1521,1944,2301,3000,3128,3306,4000,4001,4002,4100,5000,5432,5800,5801,5802,6346,6347,7001,7002,8000,8080,8443,8888,30821"
+    commonPorts="21,22,23,66,80,81,443,445,457,1080,1100,1241,1352,1433,1434,1521,1944,2301,3000,3128,3306,4000,4001,4002,4100,5000,5432,5800,5801,5802,6346,6347,7001,7002,8000,8080,8443,8888,30821,139,11211,110,25,3389,5900"
     redOpen="\033[31m"
     redClose="\033[0m"
     gitToken=""
 }
 
+
+#Active is taking a long time. Investigate.
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
     amass intel -asn $asn 2>/dev/null
@@ -111,14 +118,21 @@ subdomainEnum(){
         #done < $topLevelDomains
 
         #Custom Cert scraping
-        echo "Starting SSL Cert Enumeration on $target"
-        nuclei -l $hosts -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | grep -v '[*@:]' | \
-            grep -v '^\.' | grep -f <(sed 's/^/\\./; s/$/$/' $topLevelDomains) | anew $subdomains 1>/dev/null
+        echo -e "$redOpen Starting SSL Cert Enumeration on $target $redClose"
+        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | grep -v '[*@:]' | \
+            grep -v '^\.' | grep -f $topLevelDomains | anew $subdomains 1>/dev/null
 
         #This will output new wildcard domains from certs. These domains are likely out of scope. Review manually. 
-        nuclei -l $hosts -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | \
+        nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | \
             sed 's/^\*\.//' | anew $unconfirmedTopLevelDomains 1>/dev/null
     fi
+}
+
+wayBackUrls(){
+    echo -e "$redOpen Starting Wayback Machine enumeration on $target $redClose"
+    while IFS= read domain; do
+        echo $domain | waybackurls | unfurl domains | anew $subdomains
+    done < $subdomains
 }
 
 githubEnum(){
@@ -139,7 +153,7 @@ httpResolve(){
 
 crawl(){
     if [[ $mode == "active" ]]; then
-       cat hosts.txt | hakrawler -insecure -subs -u -d 5 | unfurl format %d | grep -i $target | anew $subdomains
+       cat $hosts | hakrawler -insecure -subs -u -d 5 | unfurl format %d | grep -f $topLevelDomains | anew $hosts
     fi
 }
 
@@ -161,12 +175,14 @@ nucleiScan(){
 iisDiscovery(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting IIS Discovery on $target $redClose"
-        nuclei -l "$hosts" -template "./CustomTemplates/enchanced-iis-discovery.yaml" -rl $rateLimit -silent | anew $iisServers
+        nuclei -l "$hosts" -t "./CustomTemplates/enhanced-iis-discovery.yaml" -rl $rateLimit -silent | anew $iisServers
     fi
 }
 
 serviceScan(){
-    sudo masscan $cidr -p "21,22,23,139,445,3389,1443,6379,2375,2376"
+    if [[ $mode == "active" ]]; then
+        sudo masscan $cidr -p $commonPorts
+    fi
 }
 
 main "$@"
