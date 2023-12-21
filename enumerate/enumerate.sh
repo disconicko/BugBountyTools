@@ -34,6 +34,7 @@ main () {
     echo -e "$redOpen Starting Phase 2 - Information Gathering on $target $redClose"
     #portScan
     iisDiscovery
+    serviceScan
     echo -e "$redOpen Finished Phase 2 - Information Gathering on $target $redClose"
 
     # Phase 3 Vulnerability Scanning
@@ -64,6 +65,7 @@ initializeVariables(){
     hosts="$currentDirectory/Enumeration/hosts.txt"
     unconfirmedTopLevelDomains="$currentDirectory/InformationGathering/unconfirmedTopLevelDomains.txt"
     iisServers="$currentDirectory/InformationGathering/iisServers.txt"
+    nmapOutput="$currentDirectory/InformationGathering/nmap.out"
     vulnerabilities="$currentDirectory/VulnerabilityScanning/vulnerabilities.txt"
 
     # Files for outputting custom wordlists
@@ -119,8 +121,7 @@ subdomainEnum(){
 
         #Custom Cert scraping
         echo -e "$redOpen Starting SSL Cert Enumeration on $target $redClose"
-        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | grep -v '[*@:]' | \
-            grep -v '^\.' | grep -f $topLevelDomains | anew $subdomains 1>/dev/null
+        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | grep -f $topLevelDomains | anew $subdomains 1>/dev/null
 
         #This will output new wildcard domains from certs. These domains are likely out of scope. Review manually. 
         nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | \
@@ -153,7 +154,7 @@ httpResolve(){
 
 crawl(){
     if [[ $mode == "active" ]]; then
-       cat $hosts | hakrawler -insecure -subs -u -d 5 | unfurl format %d | grep -f $topLevelDomains | anew $hosts
+       cat $hosts | hakrawler -insecure -subs -u -d 5 | unfurl format %s://%d | grep -f $topLevelDomains | anew $hosts
     fi
 }
 
@@ -181,7 +182,12 @@ iisDiscovery(){
 
 serviceScan(){
     if [[ $mode == "active" ]]; then
-        sudo masscan $cidr -p $commonPorts
+        echo -e "$redOpen Starting Nmap Scan on $target $redClose"
+        nmapFormat="${cidr//,/' '}"
+        nmap $nmapFormat -sV -T5 -F -oG $nmapOutput
+
+        echo -e "$redOpen Starting Credential Spraying on $target $redClose"
+        brutespray $nmapOutput
     fi
 }
 

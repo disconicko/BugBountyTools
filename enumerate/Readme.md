@@ -48,6 +48,7 @@ See:
 https://gist.github.com/jhaddix/2a08178b94e2fb37ca2bb47b25bcaed1
 ```
 * Add certificate scraping for subdomains. **DONE** 
+* Add default credentiaal scanner. **DONE**
 * Add option to run without CIDR.
 * Add option to run without CIDR or ASN. Will run off known top-level domains. 
 * Add Port scanning. Either Masscan or Nmap (tuned). Need to find a tool with a clean output. All port scans will be rate limited.
