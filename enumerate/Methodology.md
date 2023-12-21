@@ -86,7 +86,7 @@ With our extensive list of verified HTTP services in hand, we can delve deeper i
 ```
 nuclei -l hosts.txt -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | grep [DOMAIN] | anew subdomains.txt
 
-nuclei -l hosts.txt -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | grep [DOMAIN] | anew subdomains.txt
+nuclei -l hosts.txt -t ssl/wildcard-tls.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | grep [DOMAIN] | anew subdomains.txt
 ```
 
 ![Alt text](Images/googleSSL.png)
@@ -128,5 +128,7 @@ Now we have a bunch of valid open ports we can automate the process testing thes
 ```
 brutespray -f [NMAP-FILE]
 ```
+
+## Github Dorking
 
 

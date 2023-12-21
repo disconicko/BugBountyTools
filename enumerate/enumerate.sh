@@ -41,7 +41,7 @@ main () {
     echo -e "$redOpen Starting Phase 3 - Vulnerability Scanning on $target $redClose"
     #Nuclei scans are likely to get your IP Banned by Akamai. Find a way to obfuscate scans if possible.
     #Add check for Akamai IP ban error. 
-    #nucleiScan 
+    nucleiScan 
     #niktoScan
     echo -e "$redOpen Finished Phase 3 - Vulnerability Scanning on $target $redClose"
     echo -e "$redOpen Script finished - Happy Hacking $redClose"
@@ -80,8 +80,6 @@ initializeVariables(){
     gitToken=""
 }
 
-
-#Active is taking a long time. Investigate.
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
     amass intel -asn $asn 2>/dev/null
@@ -89,15 +87,6 @@ asnEnum() {
     while IFS= read -r domain; do
         amass db -names -d $domain | anew $subdomains
     done < $topLevelDomains
-
-    if [[ $mode == "active" ]]; then
-        echo -e "$redOpen Starting active ASN enumeration on $target $redClose"
-        amass intel -active -asn $asn -p $commonports
-
-        while IFS= read -r domain; do
-            amass db -names -d $domain | anew $subdomains
-        done < $topLevelDomains
-    fi
 }
 
 subdomainEnum(){
@@ -121,11 +110,12 @@ subdomainEnum(){
 
         #Custom Cert scraping
         echo -e "$redOpen Starting SSL Cert Enumeration on $target $redClose"
-        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | grep -f $topLevelDomains | anew $subdomains 1>/dev/null
+        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | \
+            grep -f $topLevelDomains | anew $subdomains | httprobe | anew $hosts 
 
         #This will output new wildcard domains from certs. These domains are likely out of scope. Review manually. 
-        nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | \
-            sed 's/^\*\.//' | anew $unconfirmedTopLevelDomains 1>/dev/null
+        nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\*\.//' | \
+            anew $unconfirmedTopLevelDomains | anew $subdomains | httprobe | anew $hosts
     fi
 }
 
@@ -161,15 +151,15 @@ crawl(){
 portScan(){
     if [[ -n $cidr && $mode == "active" ]]; then
         echo -e "$redOpen Starting Port on $target $redClose"
-        #sudo masscan $cidr -p-
+        sudo masscan $cidr -p-
     fi
 }
 
 nucleiScan(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Nuclei Scans on $target $redClose"
-        nuclei -l "$subdomains" -severity low,medium,high,critical -rl $rateLimit -silent | anew $vulnerabilities
-        nuclei -l "$hosts" -severity low,medium,high,critical -rl $rateLimit -silent | anew $vulnerabilities
+        nuclei -l "$subdomains" -severity high,critical -rl 10 -c 2 -silent | anew $vulnerabilities
+        nuclei -l "$hosts" -severity high,critical -rl 10 -c 2 -silent | anew $vulnerabilities
     fi
 }
 
