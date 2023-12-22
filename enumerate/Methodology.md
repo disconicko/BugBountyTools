@@ -146,4 +146,8 @@ Now that our enumeration is out of the way it is time to start wise scope analys
 
 ## Fetch Headers and Roots
 
-When beginning this phase I like to query every host from the hosts.txt file and save their html and header responses. To do this I use a tool called Fairly Fast Fetcher (FFF) and Grep Fast (GF) by Tomnomnom. This tool outputs 
+At the start of this phase, I focus on gathering the HTML content and response headers from every host listed in the hosts.txt file. For this purpose, I utilize two tools: Fairly Fast Fetcher (FFF) and Grep Fast (GF), both developed by Tomnomnom. FFF is employed to send requests to each host in the hosts.txt file, capturing and storing both the response headers and the body content. This approach provides a wealth of data for detailed analysis. To efficiently process and search through this collected data, I use GF, which acts as a wrapper for Grep. GF leverages regular expression patterns to search directories recursively for matches. Its versatility and effectiveness make it an invaluable tool, highly recommended for a variety of tasks beyond just bug bounty hunting.
+
+```
+cat hosts.txt | fff -c 10 -S -o ./roots
+```
