@@ -137,6 +137,8 @@ brutespray -f [NMAP-FILE]
 GitHub Dorking is a powerful technique for uncovering sensitive information or security vulnerabilities hidden in public repositories on GitHub. By utilizing specific search queries, often referred to as 'dorks', hackers can identify code snippets, configuration files, and other data inadvertently exposed. This method taps into the vast amount of data available on GitHub, leveraging search queries to pinpoint potential risks or leaks. To streamline this process and enhance efficiency, the gitDorks.sh script can be employed. This script automates the generation of a comprehensive wordlist of GitHub search queries, tailored for manual review.
 ```
 [USAGE]
+#Example
+#./gitDorks google.com google GitAPITokenHere
 ./gitDorks [DOMAIN] [COMPANY] [GIT-API-TOKEN]
 ```
 

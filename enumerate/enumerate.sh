@@ -104,9 +104,9 @@ subdomainEnum(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
 
-        #Taking too long. Find a way to reduce requests.
+        #Taking too long. Find a way to reduce requests. Probably hitting API Rate Limiting
         while IFS= read -r domain; do
-            amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+            amass enum -active -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         done < $topLevelDomains
 
         #Custom Cert scraping
@@ -114,9 +114,8 @@ subdomainEnum(){
         nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | \
             grep -f $topLevelDomains | anew $subdomains | httprobe | anew $hosts 
 
-        #This will output new wildcard domains from certs. These domains are likely out of scope. Review manually. 
         nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\*\.//' | \
-            anew $unconfirmedTopLevelDomains | anew $subdomains | httprobe | anew $hosts
+            anew $unconfirmedTopLevelDomains
     fi
 }
 
