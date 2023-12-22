@@ -105,7 +105,7 @@ This command will add to the list of subdomains we have. By now you have probabl
 
 ## IIS Discovery
 
-IIS server discovery is a key part of my enumeration process. Why? Well there is a lot of research indicating that if you can find a LFI vulnerablility then you can almost always get RCE. IIS servers are also vulnerable to shortname scanning. This allows us to read the the short names of the directory where the server is hosted. We can do this recursively for all sub-directories too. I recommend checking out Shub's tutorials on IIS shortname scanning. To discover IIS servers I use my custom Nuclei template.
+Discovering IIS servers is a crucial component of my enumeration strategy. The rationale behind this is substantial research suggesting that identifying a Local File Inclusion (LFI) vulnerability on IIS servers often leads to the possibility of achieving Remote Code Execution (RCE). Additionally, IIS servers are susceptible to shortname scanning, a technique that reveals the shortnames of directories where the server is hosted, and this can be applied recursively to all subdirectories. For those interested in delving deeper into this technique, I highly recommend exploring Shub's tutorials on IIS shortname scanning. To identify IIS servers, I employ a custom template I developed for Nuclei, which has proven to be effective in this task.
 
 ```
 nuclei -l [HOSTS] -t "./CustomTemplates/enhanced-iis-discovery.yaml" -rl 100 -silent
@@ -134,7 +134,7 @@ brutespray -f [NMAP-FILE]
 
 ## Github Dorking
 
-To perform Github dorking quickly, run gitDorks.sh to create a wordlist of Github searches for manual review. 
+GitHub Dorking is a powerful technique for uncovering sensitive information or security vulnerabilities hidden in public repositories on GitHub. By utilizing specific search queries, often referred to as 'dorks', hackers can identify code snippets, configuration files, and other data inadvertently exposed. This method taps into the vast amount of data available on GitHub, leveraging search queries to pinpoint potential risks or leaks. To streamline this process and enhance efficiency, the gitDorks.sh script can be employed. This script automates the generation of a comprehensive wordlist of GitHub search queries, tailored for manual review.
 ```
 [USAGE]
 ./gitDorks [DOMAIN] [COMPANY] [GIT-API-TOKEN]
@@ -150,4 +150,11 @@ At the start of this phase, I focus on gathering the HTML content and response h
 
 ```
 cat hosts.txt | fff -c 10 -S -o ./roots
+
+#List all GF patterns
+gf -list
+
+#List all headers
+gf meg-headers
+
 ```
