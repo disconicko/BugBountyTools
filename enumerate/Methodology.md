@@ -14,6 +14,9 @@
 -  Vulnerability Scanning *Caution*
 -  Github Dorking
 
+*Application Analysis*
+- Fetch headers and roots
+
 Disclaimer:
 For the purposes of this writeup, the target will be Google which has a public bugbounty program. Only perform these actions on targets with public programs or with expressed permission. 
 
@@ -131,4 +134,16 @@ brutespray -f [NMAP-FILE]
 
 ## Github Dorking
 
+To perform Github dorking quickly, run gitDorks.sh to create a wordlist of Github searches for manual review. 
+```
+[USAGE]
+./gitDorks [DOMAIN] [COMPANY] [GIT-API-TOKEN]
+```
 
+# Application Analysis
+
+Now that our enumeration is out of the way it is time to start wise scope analysis. This phase is designed to find interesting data for further investigation. However, if you prefer to investigate each host 1 at a time then ignore this section and get to work. 
+
+## Fetch Headers and Roots
+
+When beginning this phase I like to query every host from the hosts.txt file and save their html and header responses. To do this I use a tool called Fairly Fast Fetcher (FFF) and Grep Fast (GF) by Tomnomnom. This tool outputs 

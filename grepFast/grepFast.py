@@ -8,12 +8,6 @@ import json
 import re
 from array import array
 
-#TODO Fix name table so it doesn't get squashed when resized. 
-#TODO Fix description area. Breaks after a config is saved.
-#TODO Fix config save. Newly saved regex do not update the nameTable list. 
-#TODO Add ID's to regex
-#TODO add multiple regex's with + button.
-
 class BurpExtender(IBurpExtender, IHttpListener, ITab):
     def __init__(self):
         self.regexJson = self.loadRegexFile()
@@ -333,8 +327,8 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         activeColumn = self.nameTable.getColumn("Active")
         nameColumn.setPreferredWidth(200)
         activeColumn.setPreferredWidth(100)
-        activeColumn.setMaxWidth(100)  # Ensure the "Active" column doesn't exceed this width
-        activeColumn.setMinWidth(50)  # Ensure the "Active" column doesn't shrink below this width
+        activeColumn.setMaxWidth(100)
+        activeColumn.setMinWidth(50) 
 
 
         # Wrap the table in a scroll pane with vertical scrollbar only
@@ -372,9 +366,8 @@ class AddFieldActionListener(ActionListener):
         borderPadding = BorderFactory.createEmptyBorder(10, 10, 10, 10)
         borderOutline = BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1)
         compoundBorder = BorderFactory.createCompoundBorder(borderOutline, borderPadding)
-        # Create a new text field and add it to the panel
         regexField = JTextArea()
-        regexField.setPreferredSize(Dimension(700, 40))  # Set preferred size for each field
+        regexField.setPreferredSize(Dimension(700, 40)) 
         regexField.setBorder(compoundBorder)
         self.panel.add(regexField)
         self.panel.revalidate()
@@ -390,7 +383,7 @@ class CustomScanIssue(IScanIssue):
      
         self._httpService = httpService
         self._url = url
-        self._httpMessages = httpMessages  # This should be the annotated messages
+        self._httpMessages = httpMessages
         self._name = name
         self._severity = severity
         self._confidence = confidence

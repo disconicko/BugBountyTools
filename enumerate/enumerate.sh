@@ -32,16 +32,17 @@ main () {
     
     # Phase 2 Information Gathering
     echo -e "$redOpen Starting Phase 2 - Information Gathering on $target $redClose"
-    #portScan
     iisDiscovery
+    getHeaders
     serviceScan
+    #portScan
     echo -e "$redOpen Finished Phase 2 - Information Gathering on $target $redClose"
 
     # Phase 3 Vulnerability Scanning
     echo -e "$redOpen Starting Phase 3 - Vulnerability Scanning on $target $redClose"
     #Nuclei scans are likely to get your IP Banned by Akamai. Find a way to obfuscate scans if possible.
     #Add check for Akamai IP ban error. 
-    nucleiScan 
+    #nucleiScan 
     #niktoScan
     echo -e "$redOpen Finished Phase 3 - Vulnerability Scanning on $target $redClose"
     echo -e "$redOpen Script finished - Happy Hacking $redClose"
@@ -104,9 +105,9 @@ subdomainEnum(){
         echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
 
         #Taking too long. Find a way to reduce requests.
-        #while IFS= read -r domain; do
-            #amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        #done < $topLevelDomains
+        while IFS= read -r domain; do
+            amass enum -active -d $domain -rqps $rateLimit | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+        done < $topLevelDomains
 
         #Custom Cert scraping
         echo -e "$redOpen Starting SSL Cert Enumeration on $target $redClose"
@@ -145,6 +146,14 @@ httpResolve(){
 crawl(){
     if [[ $mode == "active" ]]; then
        cat $hosts | hakrawler -insecure -subs -u -d 5 | unfurl format %s://%d | grep -f $topLevelDomains | anew $hosts
+    fi
+}
+
+getHeaders(){
+    if [[ $mode == "active" ]]; then
+        cat $hosts | fff -d 5 -S -o $currentDirectory/InformationGathering/roots
+        gf meg-headers | anew headers
+        sort headers
     fi
 }
 
