@@ -40,9 +40,7 @@ main () {
 
     # Phase 3 Vulnerability Scanning
     echo -e "$redOpen Starting Phase 3 - Vulnerability Scanning on $target $redClose"
-    #Nuclei scans are likely to get your IP Banned by Akamai. Find a way to obfuscate scans if possible.
-    #Add check for Akamai IP ban error. 
-    #nucleiScan 
+    nucleiScan 
     #niktoScan
     echo -e "$redOpen Finished Phase 3 - Vulnerability Scanning on $target $redClose"
     echo -e "$redOpen Script finished - Happy Hacking $redClose"
@@ -166,8 +164,8 @@ portScan(){
 nucleiScan(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Nuclei Scans on $target $redClose"
-        nuclei -l "$subdomains" -severity high,critical -rl 10 -c 2 -silent | anew $vulnerabilities
-        nuclei -l "$hosts" -severity high,critical -rl 10 -c 2 -silent | anew $vulnerabilities
+        nuclei -l "$subdomains" -severity high,critical -rl 20 -c 2 -silent | anew $vulnerabilities
+        nuclei -l "$hosts" -severity high,critical -rl 20 -c 2 -silent | anew $vulnerabilities
     fi
 }
 

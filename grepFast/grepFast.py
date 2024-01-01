@@ -250,12 +250,6 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         self.regexJson = self.loadRegexFile()
         self.updateNameList()
 
-        # Revalidate and repaint components
-        self.regexPanel.revalidate()
-        self.regexPanel.repaint()
-        self.nameTable.revalidate()
-        self.nameTable.repaint()
-
     def updateCheckboxList(self):
         model = DefaultListModel()
         for obj in self.regexJson:
