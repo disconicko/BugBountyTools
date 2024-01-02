@@ -64,9 +64,9 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
 
         # Middle-Top panel for checkbox and description
         self.descriptionArea = JTextArea()
-        self.descriptionArea.setLineWrap(False)  # Keep line wrapping disabled
+        self.descriptionArea.setLineWrap(False)
         self.descriptionArea.setEditable(False)
-        descriptionScrollPane = JScrollPane(self.descriptionArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)  # Disable horizontal scrolling
+        descriptionScrollPane = JScrollPane(self.descriptionArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
         descriptionScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1))
         self.checkbox = JCheckBox("Active")
 
@@ -79,7 +79,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         c.gridwidth = 4
         c.gridheight = 3
         c.weightx = 0.5
-        c.weighty = 0.5  # Adjusted weight
+        c.weighty = 0.5
         descriptionContainerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10))
         mainPanel.add(descriptionContainerPanel, c)
 
@@ -101,22 +101,22 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         c.gridx = 3
         c.gridy = 4
         c.gridwidth = 3
-        c.gridheight = 2  # Reduced height
+        c.gridheight = 2
         c.fill = GridBagConstraints.BOTH
         c.weightx = 0.5
-        c.weighty = 0.5  # Adjusted weight
+        c.weighty = 0.5
         configPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10))
         mainPanel.add(configPanel, c)
 
         # Empty panel for spacing on the bottom
         emptyPanelBottom = JPanel()
         emptyPanelBottom.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10))
-        c.gridx = 3  # Starting from the same column as configPanel
-        c.gridy = 6  # Positioned directly below the now-smaller configPanel
-        c.gridwidth = 3  # Spanning 3 columns wide
-        c.gridheight = 1  # Only 1 cell high
-        c.weightx = 0.0  # No additional horizontal space allocation
-        c.weighty = 0.0  # No additional vertical space allocation
+        c.gridx = 3
+        c.gridy = 6
+        c.gridwidth = 3
+        c.gridheight = 1
+        c.weightx = 0.0
+        c.weighty = 0.0
         c.fill = GridBagConstraints.HORIZONTAL
         mainPanel.add(emptyPanelBottom, c)
 
@@ -219,26 +219,19 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         
     def saveConfig(self, event):
         # Collect regex patterns
-        regex_patterns = []
-        for component in self.regexPanel.getComponents():
-            if isinstance(component, JTextArea):
-                regex_patterns.append(component.getText())
 
         # Create new configuration object
         new_config = {
             "name": self.nameField.text,
             "active": True,
-            "body": True,
-            "headers": False,
-            "regex": regex_patterns,
+            "regex": [self.regexField.text],
             "severity": self.severityField.getSelectedItem(),
             "description": self.descriptionField.text
         }
 
         # Append new configuration and save to file
         self.regexJson.append(new_config)
-        with open("config.json", "w") as json_file:
-            json.dump(self.regexJson, json_file, indent=4)
+        self.saveRegexFile()
 
         # Clear input fields
         self.severityField.setSelectedIndex(0)
@@ -248,8 +241,16 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
 
         # Reload configuration and update UI
         self.regexJson = self.loadRegexFile()
-        # Update the name list with the last configuration item
         self.updateNameList()
+
+    def saveRegexFile(self):
+        try:
+            with open("config.json", "w") as file:
+                json.dump(self.regexJson, file, indent=4)
+            print("Regex configuration saved successfully.")
+        except Exception as e:
+            print("Error saving regex configuration:", str(e))
+
 
     def updateCheckboxList(self):
         model = DefaultListModel()
@@ -259,7 +260,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
 
         # Assuming self.nameList is the JList for the checkboxes
         self.nameList.setModel(model)
-        self.nameList.repaint() 
+        self.nameList.repaint()
 
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         if messageIsRequest:
@@ -334,21 +335,18 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         return scrollPane
     
     def updateNameList(self):
-        # Get the current table model
-        tableModel = self.nameTable.getModel()
+        # Column names for the table
+        columnNames = ["Name", "Active"]
 
-        # Check if regexJson is not empty
-        if self.regexJson:
-            # Get the last object in regexJson
-            lastObj = self.regexJson[-1]
+        # Create a new table model with the updated data
+        updatedTableModel = DefaultTableModel(columnNames, 0)
+        for obj in self.regexJson:
+            name = obj["name"]
+            active = "Yes" if obj["active"] else "No"
+            updatedTableModel.addRow([name, active])
 
-            # Extract the name and active status
-            name = lastObj["name"]
-            active = "Yes" if lastObj["active"] else "No"
-
-            # Add this row to the table model
-            tableModel.addRow([name, active])
-
+        # Set the new model to the nameTable
+        self.nameTable.setModel(updatedTableModel)
     
 # MouseListener updated for JTable
 class TableMouseListener(MouseAdapter):
@@ -356,18 +354,40 @@ class TableMouseListener(MouseAdapter):
         self.extender = extender
 
     def mouseClicked(self, event):
-        # Get the index of the selected row from the view
         row = self.extender.nameTable.getSelectedRow()
         if row >= 0:
-            # Convert the view index to the model index if the table is sorted
             modelRow = self.extender.nameTable.convertRowIndexToModel(row)
-            # Access the data from the extender's regexJson using the model index
             regexConfig = self.extender.regexJson[modelRow]
+
+            # Update the checkbox state and reset its action listener
             self.extender.checkbox.setSelected(regexConfig["active"])
-            descriptionText = "Name:\n" + regexConfig["name"] + "\n\nDescription:\n" + regexConfig["description"] + "\n\nRegex Patterns:\n"
-            for regex in regexConfig["regex"]:
-                descriptionText += regex + "\n"
+            self.updateCheckboxListener(regexConfig)
+
+            # Update description text
+            descriptionText = "Name:\n{}\n\nDescription:\n{}\n\nRegex Patterns:\n{}".format(
+            regexConfig["name"], regexConfig["description"], '\n'.join(regexConfig["regex"]))
             self.extender.descriptionArea.setText(descriptionText)
+            self.extender.updateNameList()
+
+    def updateCheckboxListener(self, regexConfig):
+        # Remove all existing action listeners to avoid duplicates
+        for actionListener in self.extender.checkbox.getActionListeners():
+            self.extender.checkbox.removeActionListener(actionListener)
+
+        # Add the new action listener with the updated regexConfig
+        self.extender.checkbox.addActionListener(CheckboxListener(regexConfig, self.extender))
+
+class CheckboxListener(ActionListener):
+    def __init__(self, obj, extender):
+        self.obj = obj
+        self.extender = extender
+
+    def actionPerformed(self, event):
+        checkbox = event.getSource()
+        self.obj['active'] = checkbox.isSelected()
+        print("Checkbox clicked for:", self.obj['name'], "New Active status:", self.obj['active'])
+        self.extender.saveRegexFile()
+        self.extender.updateNameList() 
 
 class AddFieldActionListener(ActionListener):
     def __init__(self, panel):
@@ -382,7 +402,6 @@ class AddFieldActionListener(ActionListener):
         regexField.setBorder(compoundBorder)
         self.panel.add(regexField)
         self.panel.revalidate()
-
 
 class ListCellRenderer(DefaultListCellRenderer):
     def getListCellRendererComponent(self, list, value, index, isSelected, cellHasFocus):
