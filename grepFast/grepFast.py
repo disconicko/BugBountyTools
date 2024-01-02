@@ -50,7 +50,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         mainPanel.add(titlePanel, c)
 
         # Left panel for names
-        nameListPanel = JScrollPane(self.updateNameList())
+        nameListPanel = JScrollPane(self.createNameList())
         nameListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10))
         nameListPanel.setMinimumSize(Dimension(300,800))
         c.gridx = 0
@@ -248,6 +248,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
 
         # Reload configuration and update UI
         self.regexJson = self.loadRegexFile()
+        # Update the name list with the last configuration item
         self.updateNameList()
 
     def updateCheckboxList(self):
@@ -299,7 +300,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         return byte_offset
 
     # Then, in your updateNameList method, use the NonEditableTableModel subclass
-    def updateNameList(self):
+    def createNameList(self):
         columnNames = ["Name", "Active"]
         tableModel = DefaultTableModel(columnNames, 0)
 
@@ -324,7 +325,6 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         activeColumn.setMaxWidth(100)
         activeColumn.setMinWidth(50) 
 
-
         # Wrap the table in a scroll pane with vertical scrollbar only
         scrollPane = JScrollPane(self.nameTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
 
@@ -332,6 +332,23 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         tableMouseListener = TableMouseListener(self)
         self.nameTable.addMouseListener(tableMouseListener)
         return scrollPane
+    
+    def updateNameList(self):
+        # Get the current table model
+        tableModel = self.nameTable.getModel()
+
+        # Check if regexJson is not empty
+        if self.regexJson:
+            # Get the last object in regexJson
+            lastObj = self.regexJson[-1]
+
+            # Extract the name and active status
+            name = lastObj["name"]
+            active = "Yes" if lastObj["active"] else "No"
+
+            # Add this row to the table model
+            tableModel.addRow([name, active])
+
     
 # MouseListener updated for JTable
 class TableMouseListener(MouseAdapter):

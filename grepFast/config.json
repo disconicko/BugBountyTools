@@ -10,7 +10,7 @@
     }, 
     {
         "severity": "High", 
-        "active": false, 
+        "active": true, 
         "description": "This regex is designed to discover private keys such as RSA, PGP, EC, etc. All credit goes to Dwisiswan0.\nThe Github for the GF templates can be found below:\nhttps://github.com/dwisiswant0/gf-secrets/blob/master/.gf/", 
         "regex": [
             "-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----"
@@ -19,12 +19,21 @@
     }, 
     {
         "severity": "Low", 
-        "active": true, 
+        "active": false, 
         "description": "This regex is designed to discover potentially vulnerable sinks. This will generate a lot of issues, it is recommended to only use this on specific files.", 
         "regex": [
             "[^a-z0-9_](system|exec|popen|pcntl_exec|eval|create_function|unserialize|file_exists|md5_file|filemtime|filesize|assert) ?\\("
         ], 
         "name": "Potentially Vulnerable Sinks"
+    }, 
+    {
+        "severity": "Low", 
+        "active": false, 
+        "description": "This regex pattern is designed to detect the use of potentially dangerous functions in source code, which could lead to security vulnerabilities like command injection or arbitrary code execution.", 
+        "regex": [
+            "(eval|run|exec|process|system|popen|spawn|dup2)"
+        ], 
+        "name": "Dangerous Functions Detection"
     }, 
     {
         "severity": "Medium", 
@@ -46,5 +55,314 @@
             "//s3-[a-z0-9-]+\\.amazonaws\\.com/[a-z0-9._-]+"
         ], 
         "name": "AWS S3 Secrets"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "This regex is designed to discover private IP addresses in the standard private ranges.", 
+        "regex": [
+            "10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}", 
+            "172\\.(1[6-9]|2[0-9]|3[0-1])\\.\\d{1,3}\\.\\d{1,3}", 
+            "192\\.168\\.\\d{1,3}\\.\\d{1,3}"
+        ], 
+        "name": "Private IP Address"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "This regex is designed to match specific PHP Curl functions. Investigate for possible SSRF", 
+        "regex": [
+            "CURLOPT_(HTTPHEADER|HEADER|COOKIE|RANGE|REFERER|USERAGENT|PROXYHEADER)"
+        ], 
+        "name": "PHP Curl"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "These regex patterns are designed to catch common PHP errors and warnings in log files or output.", 
+        "regex": [
+            "php warning", 
+            "php error", 
+            "fatal error", 
+            "uncaught exception", 
+            "include_path", 
+            "undefined index", 
+            "undefined variable", 
+            "\\?php", 
+            "<\\?[^x]", 
+            "stack trace\\:", 
+            "expects parameter [0-9]*", 
+            "Debug Trace"
+        ], 
+        "name": "PHP Errors"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "These regex patterns are designed to detect serialized PHP objects. They target the specific structure of serialized arrays, objects, and strings in PHP.", 
+        "regex": [
+            "a:[0-9]+:\\{", 
+            "O:[0-9]+:\\\"", 
+            "s:[0-9]+:\\\""
+        ], 
+        "name": "Serialized PHP Object"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "These regex patterns are designed to detect error messages and notifications that might indicate possible domain takeovers or unclaimed web resources.", 
+        "regex": [
+            "There is no app configured at that hostname", 
+            "NoSuchBucket", 
+            "No Such Account", 
+            "You're Almost There", 
+            "a GitHub Pages site here", 
+            "There's nothing here", 
+            "project not found", 
+            "Your CNAME settings", 
+            "InvalidBucketName", 
+            "PermanentRedirect", 
+            "The specified bucket does not exist", 
+            "Repository not found", 
+            "Sorry, We Couldn't Find That Page", 
+            "The feed has not been found.", 
+            "The thing you were looking for is no longer here, or never was", 
+            "Please renew your subscription", 
+            "There isn't a Github Pages site here.", 
+            "We could not find what you're looking for.", 
+            "No settings were found for this company:", 
+            "No such app", 
+            "is not a registered InCloud YouTrack", 
+            "Unrecognized domain", 
+            "project not found", 
+            "This UserVoice subdomain is currently available!", 
+            "Do you want to register", 
+            "Help Center Closed"
+        ], 
+        "name": "Possible Domain Takeover"
+    }, 
+    {
+        "severity": "Information", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect file upload fields in HTML. It matches variations of the <input> tag with the type attribute set to 'file', accounting for different attribute arrangements and quoting styles.", 
+        "regex": [
+            "<input[^>]*type=[\"']?file[\"']?[^>]*>"
+        ], 
+        "name": "File Upload Field Detected"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "Regex patterns to detect Slack tokens and webhook URLs.", 
+        "regex": [
+            "https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}"
+        ], 
+        "name": "Slack Token and Webhook Detected"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "Regex patterns to detect API keys and service account tokens for various services.", 
+        "regex": [
+            "AKIA[0-9A-Z]{16}", 
+            "amzn\\.mws\\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", 
+            "AIza[0-9A-Za-z\\-_]{35}", 
+            "[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com", 
+            "\"type\": \"service_account\"", 
+            "ya29\\.[0-9A-Za-z\\-_]+", 
+            "[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}", 
+            "access_token\\$production\\$[0-9a-z]{16}\\$[0-9a-f]{32}", 
+            "sk_live_[0-9a-z]{32}", 
+            "sk_live_[0-9a-zA-Z]{24}", 
+            "rk_live_[0-9a-zA-Z]{24}", 
+            "sq0atp-[0-9A-Za-z\\-_]{22}", 
+            "sq0csp-[0-9A-Za-z\\-_]{43}", 
+            "SK[0-9a-fA-F]{32}"
+        ], 
+        "name": "API Key and Service Accounts"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "Regex patterns to detect various types of credentials and sensitive data.", 
+        "regex": [
+            "EAACEdEose0cBA[0-9A-Za-z]+", 
+            "[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*['|\"][0-9a-f]{32}['|\"]", 
+            "[g|G][i|I][t|T][h|H][u|U][b|B].*['|\"][0-9a-zA-Z]{35,40}['|\"]", 
+            "[a|A][p|P][i|I][_]?[k|K][e|E][y|Y].*['|\"][0-9a-zA-Z]{32,45}['|\"]", 
+            "[s|S][e|E][c|C][r|R][e|E][t|T].*['|\"][0-9a-zA-Z]{32,45}['|\"]", 
+            "[0-9a-f]{32}-us[0-9]{1,2}", 
+            "key-[0-9a-zA-Z]{32}", 
+            "[a-zA-Z]{3,10}://[^/\\s:@]{3,20}:[^/\\s:@]{3,20}@.{1,100}[\"'\\s]", 
+            "[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*[1-9][0-9]+-[0-9a-zA-Z]{40}", 
+            "[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*['|\"][0-9a-zA-Z]{35,44}['|\"]"
+        ], 
+        "name": "Miscellaneous Credentials"
+    }, 
+    {
+        "severity": "Medium", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Heroku API tokens in text. Heroku tokens typically follow a UUID format and are used for authentication with the Heroku API.", 
+        "regex": [
+            "heroku.*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"
+        ], 
+        "name": "Heroku Token"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect PayPal access tokens in text. These tokens are typically used for authentication with PayPal's API and are crucial for maintaining secure transactions.", 
+        "regex": [
+            "access_token\\$production\\$[0-9a-z]{16}\\$[0-9a-f]{32}"
+        ], 
+        "name": "PayPal Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "These regex patterns are designed to detect live Stripe secret keys and restricted keys in text. Such keys are used for authentication with Stripe's API and are critical for maintaining secure payment processing.", 
+        "regex": [
+            "sk_live_[0-9a-zA-Z]{24}", 
+            "rk_live_[0-9a-zA-Z]{24}"
+        ], 
+        "name": "Stripe Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "These regex patterns are designed to detect Square access tokens and secret keys in text. These keys are crucial for secure API interactions and payment processing with Square services.", 
+        "regex": [
+            "sq0atp-[0-9A-Za-z\\-\\_]{22}", 
+            "sq0csp-[0-9A-Za-z\\-\\_]{43}"
+        ], 
+        "name": "Square Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Twitter-related secrets or tokens in text. It targets strings that might indicate Twitter API keys, access tokens, or other sensitive credentials associated with Twitter integrations.", 
+        "regex": [
+            "twitter.*['\\\"]([0-9a-zA-Z]{35,44})['\\\"]"
+        ], 
+        "name": "Twitter OAuth Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Twitter tokens in text. It targets strings that are likely to be Twitter API tokens, which are crucial for interacting with the Twitter API and need to be kept secure.", 
+        "regex": [
+            "twitter.*[1-9][0-9]+-[0-9a-zA-Z]{40}"
+        ], 
+        "name": "Twitter Token"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Twilio API keys in text. Twilio API keys start with 'SK' followed by a 32-character hexadecimal string, and are essential for authentication with Twilio's services.", 
+        "regex": [
+            "SK[0-9a-fA-F]{32}"
+        ], 
+        "name": "Twilio Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Picatic API keys in text. These keys are typically used for authenticating with the Picatic API and are crucial for maintaining secure access to Picatic services.", 
+        "regex": [
+            "sk_live_[0-9a-z]{32}"
+        ], 
+        "name": "Picatic API Key"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Mailchimp API keys in text. Mailchimp API keys typically consist of a 32-character hexadecimal string followed by '-us' and a 1 or 2-digit number.", 
+        "regex": [
+            "[0-9a-f]{32}-us[0-9]{1,2}"
+        ], 
+        "name": "Mailchimp API Key"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Mailgun API keys in text. Mailgun API keys are identifiable by their 'key-' prefix followed by a 32-character alphanumeric string.", 
+        "regex": [
+            "key-[0-9a-zA-Z]{32}"
+        ], 
+        "name": "Mailgun API Key"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Google API keys in text. Google API keys typically start with 'AIza' followed by a 35-character mix of alphanumeric characters, including hyphens and underscores.", 
+        "regex": [
+            "AIza[0-9A-Za-z\\-\\_]{35}"
+        ], 
+        "name": "Google API Key"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Google OAuth tokens in text. These tokens are typically in the format of a numeric string followed by a 32-character alphanumeric string, ending with '.apps.googleusercontent.com', which is part of Google's OAuth 2.0 implementation.", 
+        "regex": [
+            "[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com"
+        ], 
+        "name": "Google OAuth Token"
+    }, 
+    {
+        "severity": "Low", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Google Service Account configurations in text. It specifically looks for the string '\"type\": \"service_account\"', which is a key part of Google Service Account JSON keys.", 
+        "regex": [
+            "\"type\": \"service_account\""
+        ], 
+        "name": "Google Service Account"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Google access tokens in text. These tokens usually start with 'ya29.' and are followed by a mix of alphanumeric characters, including hyphens and underscores.", 
+        "regex": [
+            "ya29\\.[0-9A-Za-z\\-\\_]+"
+        ], 
+        "name": "Google Access Token"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Facebook OAuth secrets in text. It targets strings that likely indicate Facebook API keys or access tokens, typically represented as a 32-character hexadecimal string, often found in application code or configuration files.", 
+        "regex": [
+            "facebook.*['\\\"]([0-9a-f]{32})['\\\"]"
+        ], 
+        "name": "Facebook OAuth Secrets"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect Facebook access tokens in text. These tokens usually start with 'EAACEdEose0cBA' and are followed by a mix of alphanumeric characters, used for authentication and authorization with Facebook's API.", 
+        "regex": [
+            "EAACEdEose0cBA[0-9A-Za-z]+"
+        ], 
+        "name": "Facebook Access Token"
+    }, 
+    {
+        "severity": "High", 
+        "active": true, 
+        "description": "These regex patterns are designed to detect Firebase database URLs and Firebase-hosted app URLs in text. These URLs typically include '.firebaseio.com', '.firebaseapp.com', or '.appspot.com' and are crucial for identifying Firebase services used in applications.", 
+        "regex": [
+            "[a-z0-9.-]+\\.firebaseio\\.com", 
+            "[a-z0-9.-]+\\.firebaseapp\\.com", 
+            "[a-z0-9.-]+\\.appspot\\.com"
+        ], 
+        "name": "Firebase Services"
+    }, 
+    {
+        "severity": "Medium", 
+        "active": true, 
+        "description": "This regex pattern is designed to detect PHP functions in text that could potentially lead to information disclosure. Functions like phpinfo, getenv, get_current_user, and others might reveal sensitive server or environment information if used improperly.", 
+        "regex": [
+            "phpinfo|posix_mkfifo|posix_getlogin|posix_ttyname|getenv|get_current_user|proc_get_status|get_cfg_var|disk_free_space|disk_total_space|diskfreespace|getcwd|getlastmo|getmygid|getmyinode|getmypid|"
+        ], 
+        "name": "PHP Information Disclosure"
     }
 ]
