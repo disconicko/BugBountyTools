@@ -81,11 +81,7 @@ initializeVariables(){
 
 asnEnum() {
     echo -e "$redOpen Starting passive ASN enumeration on $target $redClose"
-    amass intel -asn $asn 2>/dev/null
-
-    while IFS= read -r domain; do
-        amass db -names -d $domain | anew $subdomains
-    done < $topLevelDomains
+    amass intel -asn $asn | anew $topLevelDomains
 }
 
 subdomainEnum(){
@@ -93,8 +89,7 @@ subdomainEnum(){
     while IFS= read -r domain; do
         echo -e "$redOpen Starting subdomain enumeration on $domain $redClose"
         subfinder -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        amass enum -d $domain -passive -silent
-        amass db -names -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+        amass enum -d $domain -passive -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         assetfinder -subs-only $domain -df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
     done < $topLevelDomains
@@ -104,7 +99,7 @@ subdomainEnum(){
 
         #Taking too long. Find a way to reduce requests. Probably hitting API Rate Limiting
         while IFS= read -r domain; do
-            amass enum -active -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+            amass enum -active -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         done < $topLevelDomains
 
         #Custom Cert scraping
@@ -183,7 +178,7 @@ serviceScan(){
         nmap $nmapFormat -sV -T5 -F -oG $nmapOutput
 
         echo -e "$redOpen Starting Credential Spraying on $target $redClose"
-        brutespray $nmapOutput
+        brutespray -f $nmapOutput
     fi
 }
 
