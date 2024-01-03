@@ -88,27 +88,29 @@ subdomainEnum(){
     echo -e "$redOpen Starting passive subdomain enumeration on $target $redClose"
     while IFS= read -r domain; do
         echo -e "$redOpen Starting subdomain enumeration on $domain $redClose"
-        subfinder -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        amass enum -d $domain -passive -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        assetfinder -subs-only $domain -df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+        subfinder -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
+        amass enum -d $domain -passive -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
+        assetfinder -subs-only $domain -df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
         amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+        wait
     done < $topLevelDomains
 
     if [[ $mode == "active" ]]; then
-        echo -e "$redOpen Starting active subdomain enumeration on $target $redClose"
+        echo -e "$redOpen Starting active subdomain enumeration $redClose"
 
         #Taking too long. Find a way to reduce requests. Probably hitting API Rate Limiting
         while IFS= read -r domain; do
+            echo -e "$redOpen Starting active subdomain enumeration on $domain $redClose"
             amass enum -active -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
         done < $topLevelDomains
 
         #Custom Cert scraping
         echo -e "$redOpen Starting SSL Cert Enumeration on $target $redClose"
         nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | \
-            grep -f $topLevelDomains | anew $subdomains | httprobe | anew $hosts 
-
+            grep -f $topLevelDomains | anew $subdomains | httprobe | anew $hosts &\
         nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\*\.//' | \
             anew $unconfirmedTopLevelDomains
+        wait    
     fi
 }
 
