@@ -52,9 +52,9 @@ print_usage() {
 
 initializeVariables(){
     #Directories for file storage
-    mkdir Enumeration
-    mkdir InformationGathering
-    mkdir VulnerabilityScanning
+    mkdir Enumeration 2>/dev/null
+    mkdir InformationGathering 2>/dev/null
+    mkdir VulnerabilityScanning 2>/dev/null
 
     # Files for output
     currentDirectory=$(pwd)
@@ -73,7 +73,7 @@ initializeVariables(){
 
     # Variables
     rateLimit="100"
-    commonPorts="21,22,23,66,80,81,443,445,457,1080,1100,1241,1352,1433,1434,1521,1944,2301,3000,3128,3306,4000,4001,4002,4100,5000,5432,5800,5801,5802,6346,6347,7001,7002,8000,8080,8443,8888,30821,139,11211,110,25,3389,5900"
+    commonPorts="80,443,8080,8443,8000,8081,8008,8888,8082,81,8083,82,8084,8001,8090,83,8085,8088,8002,8089,84,8091,85,8003,8092,8004,8093,86,8094,8005,8095,8006,8096,8007,8097,8009,8098,88,8099,8010,8100,8011,8101,8012,8102,8013,8103,8014,8104,8015"
     redOpen="\033[31m"
     redClose="\033[0m"
     gitToken=""
@@ -88,20 +88,62 @@ subdomainEnum(){
     echo -e "$redOpen Starting passive subdomain enumeration on $target $redClose"
     while IFS= read -r domain; do
         echo -e "$redOpen Starting subdomain enumeration on $domain $redClose"
-        subfinder -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
-        amass enum -d $domain -passive -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
-        assetfinder -subs-only $domain -df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains &\
-        amass intel -whois -d $domain | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
-        wait
+
+        # Run each command with a timeout in the background
+        timeout 5m subfinder -d "$domain" -silent | grep -v '[@*:]' | grep "$domain$" | anew $subdomains &
+        pid_subfinder=$!
+
+        timeout 5m amass enum -d "$domain" -passive -silent | grep "$domain$" | anew $subdomains &
+        pid_amass_enum=$!
+
+        timeout 5m amass intel -whois -d "$domain" | grep "$domain$" | anew $subdomains &
+        pid_amass_intel=$!
+
+        timeout 5m assetfinder --subs-only "$domain" --df /usr/share/amass/wordlists/all.txt | grep -v '[@*:]' | grep "$domain$" | anew $subdomains &
+        pid_assetfinder=$!
+
+        # Wait for all processes and check each one
+        for pid in $pid_subfinder $pid_amass_enum $pid_amass_intel $pid_assetfinder; do
+            wait $pid
+            exit_status=$?
+            if [ $exit_status -eq 124 ]; then
+                case $pid in
+                    $pid_subfinder)
+                        echo "Subfinder timed out."
+                        ;;
+                    $pid_amass_enum)
+                        echo "Amass enum timed out."
+                        ;;
+                    $pid_amass_intel)
+                        echo "Amass intel timed out."
+                        ;;
+                    $pid_assetfinder)
+                        echo "Assetfinder timed out."
+                        ;;
+                esac
+            fi
+        done
     done < $topLevelDomains
 
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting active subdomain enumeration $redClose"
 
-        #Taking too long. Find a way to reduce requests. Probably hitting API Rate Limiting
+        #Taking too long. Find a way to reduce requests. Probably hitting API Rate Limiting. Added Timeout
         while IFS= read -r domain; do
             echo -e "$redOpen Starting active subdomain enumeration on $domain $redClose"
-            amass enum -active -d $domain -silent | grep -v '[@*:]' | grep "\.$domain" | anew $subdomains
+
+            # Run amass enum with a timeout in the background
+            timeout 5m amass enum -active -d $domain -silent | grep -v '[@*:]' | grep "$domain$" | anew $subdomains &
+            pid_amass_enum=$!
+
+            # Wait for the amass enum command and capture its exit status
+            wait $pid_amass_enum
+            exit_status=$?
+
+            # Check the exit status
+            if [ $exit_status -eq 124 ]; then
+                echo "Amass enum active timed out."
+            fi
         done < $topLevelDomains
 
         #Custom Cert scraping
@@ -139,15 +181,15 @@ httpResolve(){
 
 crawl(){
     if [[ $mode == "active" ]]; then
-       cat $hosts | hakrawler -insecure -subs -u -d 5 | unfurl format %s://%d | grep -f $topLevelDomains | anew $hosts
+       cat $hosts | hakrawler -insecure -d 5 | grep -oP 'https?://[^/ ]+' | grep -f $topLevelDomains | anew $hosts
     fi
 }
 
 getHeaders(){
     if [[ $mode == "active" ]]; then
         cat $hosts | fff -d 5 -S -o $currentDirectory/InformationGathering/roots
-        gf meg-headers | anew headers
-        sort headers
+        gf meg-headers | anew $currentDirectory/InformationGathering/headers
+        sort $currentDirectory/InformationGathering/headers
     fi
 }
 
@@ -158,11 +200,20 @@ portScan(){
     fi
 }
 
+#Resolves domains with interesting ports rather than IP addresses
+commonPortScan(){
+    if [[ $mode == "active" ]]; then
+        echo -e "$redOpen Starting scan on subdomains to find http ports on $target $redClose"
+        nmap -T4 -iL $subdomains --script=http-title --open -p $commonPorts -Pn 
+    fi
+}
+
 nucleiScan(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Nuclei Scans on $target $redClose"
-        nuclei -l "$subdomains" -severity high,critical -rl 20 -c 2 -silent | anew $vulnerabilities
+        nuclei -l "$subdomains" -severity high,critical -rl 20 -c 2 -silent | anew $vulnerabilities &\
         nuclei -l "$hosts" -severity high,critical -rl 20 -c 2 -silent | anew $vulnerabilities
+        wait
     fi
 }
 
@@ -177,7 +228,7 @@ serviceScan(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Nmap Scan on $target $redClose"
         nmapFormat="${cidr//,/' '}"
-        nmap $nmapFormat -sV -T5 -F -oG $nmapOutput
+        nmap $nmapFormat -sV -T4 -F -oG $nmapOutput
 
         echo -e "$redOpen Starting Credential Spraying on $target $redClose"
         brutespray -f $nmapOutput
