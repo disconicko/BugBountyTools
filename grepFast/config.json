@@ -19,7 +19,7 @@
     }, 
     {
         "severity": "Low", 
-        "active": false, 
+        "active": true, 
         "description": "This regex is designed to discover potentially vulnerable sinks. This will generate a lot of issues, it is recommended to only use this on specific files.", 
         "regex": [
             "[^a-z0-9_](system|exec|popen|pcntl_exec|eval|create_function|unserialize|file_exists|md5_file|filemtime|filesize|assert) ?\\("
@@ -28,10 +28,10 @@
     }, 
     {
         "severity": "Low", 
-        "active": false, 
+        "active": true, 
         "description": "This regex pattern is designed to detect the use of potentially dangerous functions in source code, which could lead to security vulnerabilities like command injection or arbitrary code execution.", 
         "regex": [
-            "(eval|run|exec|process|system|popen|spawn|dup2)"
+            "(eval|run|exec|process|system|popen|spawn|dup2) ?\\("
         ], 
         "name": "Dangerous Functions Detection"
     }, 
@@ -88,8 +88,6 @@
             "include_path", 
             "undefined index", 
             "undefined variable", 
-            "\\?php", 
-            "<\\?[^x]", 
             "stack trace\\:", 
             "expects parameter [0-9]*", 
             "Debug Trace"
@@ -358,10 +356,10 @@
     }, 
     {
         "severity": "Medium", 
-        "active": true, 
+        "active": false, 
         "description": "This regex pattern is designed to detect PHP functions in text that could potentially lead to information disclosure. Functions like phpinfo, getenv, get_current_user, and others might reveal sensitive server or environment information if used improperly.", 
         "regex": [
-            "phpinfo|posix_mkfifo|posix_getlogin|posix_ttyname|getenv|get_current_user|proc_get_status|get_cfg_var|disk_free_space|disk_total_space|diskfreespace|getcwd|getlastmo|getmygid|getmyinode|getmypid|"
+            "(phpinfo|posix_mkfifo|posix_getlogin|posix_ttyname|getenv|get_current_user|proc_get_status|get_cfg_var|disk_free_space|disk_total_space|diskfreespace|getcwd|getlastmo|getmygid|getmyinode|getmypid)"
         ], 
         "name": "PHP Information Disclosure"
     }, 
@@ -370,7 +368,7 @@
         "active": true, 
         "description": "This regex pattern is designed to detect the use of potentially dangerous PHP file handling functions in source code. Functions like fopen(), tmpfile(), bzopen(), gzopen(), and SplFileObject::__construct can be used to manipulate files and might pose a security risk if used improperly.", 
         "regex": [
-            "fopen\\(|tmpfile\\(|bzopen\\(|gzopen\\(|SplFileObject::__construct"
+            "(fopen|tmpfile|bzopen|gzopen|SplFileObject::__construct) ?\\("
         ], 
         "name": "Dangerous PHP Functions"
     }, 

@@ -289,7 +289,8 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                             name=obj["name"],
                             severity=obj["severity"],
                             confidence="Tentative",
-                            issueDetail=obj["description"]
+                            issueDetail=obj["description"],
+                            remediationDetail=""
                         )
                         self._callbacks.addScanIssue(issue)
 
@@ -385,7 +386,6 @@ class CheckboxListener(ActionListener):
     def actionPerformed(self, event):
         checkbox = event.getSource()
         self.obj['active'] = checkbox.isSelected()
-        print("Checkbox clicked for:", self.obj['name'], "New Active status:", self.obj['active'])
         self.extender.saveRegexFile()
         self.extender.updateNameList() 
 
@@ -409,8 +409,7 @@ class ListCellRenderer(DefaultListCellRenderer):
         return component
     
 class CustomScanIssue(IScanIssue):
-    def __init__(self, httpService, url, httpMessages, name, severity, confidence, issueDetail):
-     
+    def __init__(self, httpService, url, httpMessages, name, severity, confidence, issueDetail, remediationDetail):
         self._httpService = httpService
         self._url = url
         self._httpMessages = httpMessages
@@ -418,6 +417,40 @@ class CustomScanIssue(IScanIssue):
         self._severity = severity
         self._confidence = confidence
         self._issueDetail = issueDetail
+        self._remediationDetail = remediationDetail
+
+    def getUrl(self):
+        return self._url
+
+    def getIssueName(self):
+        return self._name
+
+    def getIssueDetail(self):
+        return self._issueDetail
+
+    def getHttpMessages(self):
+        # Implement this method if necessary
+        return self._httpMessages  # Updated to return the actual messages
+
+    def getHttpService(self):
+        return self._httpService
+
+    def getSeverity(self):
+        return self._severity
+
+    def getConfidence(self):
+        return self._confidence 
+
+    def getIssueBackground(self):
+        # Implement the getIssueBackground method
+        return "Issue background information HERE."
+
+    def getRemediationBackground(self):
+        # Implement the getRemediationBackground method
+        return "Remediation background information HERE."
+    def getRemediationDetail(self):
+        return self._remediationDetail
+
 
 # Subclass DefaultTableModel to make table cells non-editable
 class NonEditableTableModel(DefaultTableModel):
