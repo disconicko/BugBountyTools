@@ -220,7 +220,7 @@ nucleiScan(){
 iisDiscovery(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting IIS Discovery on $target $redClose"
-        nuclei -l "$hosts" -t "./CustomTemplates/enhanced-iis-discovery.yaml" -rl $rateLimit -silent | anew $iisServers
+        nuclei -l "$hosts" -t "./CustomTemplates/enhanced-iis-detection.yaml" -rl $rateLimit -silent | anew $iisServers
     fi
 }
 
