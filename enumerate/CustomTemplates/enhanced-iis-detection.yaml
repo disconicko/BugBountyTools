@@ -1,7 +1,7 @@
 id: enhanced-iis-detection
 info:
   name: Detect IIS Server with Extended Indicators (Case-Insensitive) - Nuclei v3 Format
-  author: your_name
+  author: disconicko
   severity: info
   description: Checks for common and extended IIS server indicators in the response, regardless of case.
   tags: iis,detection
