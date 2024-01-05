@@ -98,6 +98,13 @@ else
     echo "GF Installation failed."
 fi
 
+mkdir ~/.gf
+json_content='{
+    "flags": "-hroiE",
+    "pattern": "^\u003c [a-z0-9_\\-]+: .*"
+}'
+echo "$json_content" > ~/.gf/meg-headers.json
+
 #Install Unfurl
 go install github.com/tomnomnom/unfurl@latest
 if [ $? -eq 0 ]; then

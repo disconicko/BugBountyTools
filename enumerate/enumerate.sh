@@ -87,13 +87,9 @@ initializeVariables(){
     mkdir $outputDirectory/VulnerabilityScanning 2>/dev/null    
 
     #Print Banner
-    echo \
-        """___________                                         __          
-            \_   _____/ ____  __ __  _____   ________________ _/  |_  ____  
-            |    __)_ /    \|  |  \/     \_/ __ \_  __ \__  \\   __\/ __ \ 
-            |        \   |  \  |  /  Y Y  \  ___/|  | \// __ \|  | \  ___/ 
-            /_______  /___|  /____/|__|_|  /\___  >__|  (____  /__|  \___  >
-                    \/     \/            \/     \/           \/          \/ """
+    figlet -t -k -f /usr/share/figlet/small.flf "Enumerate" 
+     
+
 }
 
 asnEnum() {
