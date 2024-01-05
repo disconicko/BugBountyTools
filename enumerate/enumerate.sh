@@ -53,10 +53,10 @@ print_usage() {
 initializeVariables(){
 
     # Files for output
-    if [[ -n $output]]; do
+    if [ -z $output ]; then
         printf "Please provide a target output directory"
         print_usage
-        quit
+        exit 1
     fi
 
     outputDirectory=$output
@@ -75,9 +75,9 @@ initializeVariables(){
 
     # Variables
     rateLimit="100"
-    commonPorts="8080,8443,8000,8081,8008,8888,8082,81,8083,82,8084,8001,8090,83,8085,8088,8002,8089,84,8091,85,8003,8092,8004,8093,86,8094,8005,8095,8006,8096,8007,8097,8009,8098,88,8099,8010,8100,8011,8101,8012,8102,8013,8103,8014,8104,8015"
     redOpen="\033[31m"
     colourClose="\033[0m"
+    blueOpen="\033[33m"
     greenOpen="\033[32m"
     gitToken=""
 
@@ -87,18 +87,34 @@ initializeVariables(){
     mkdir $outputDirectory/VulnerabilityScanning 2>/dev/null    
 
     #Print Banner
-    echo -e "   ______                ______           __ \n  / ____/_______  ____  / ____/___ ______/ /_\n / / __/ ___/ _ \/ __ \/ /_  / __ \`/ ___/ __/\n/ /_/ / /  /  __/ /_/ / __/ / /_/ (__  ) /_  \n\\____/_/   \\___/ .___/_/    \\__,_/____/\\__/  \n              /_/                            "                     
-    
+    echo \
+        """___________                                         __          
+            \_   _____/ ____  __ __  _____   ________________ _/  |_  ____  
+            |    __)_ /    \|  |  \/     \_/ __ \_  __ \__  \\   __\/ __ \ 
+            |        \   |  \  |  /  Y Y  \  ___/|  | \// __ \|  | \  ___/ 
+            /_______  /___|  /____/|__|_|  /\___  >__|  (____  /__|  \___  >
+                    \/     \/            \/     \/           \/          \/ """
 }
 
 asnEnum() {
-    echo -e "$redOpen Starting Passive ASN enumeration $colourClose"
-    amass intel -asn $asn | anew $topLevelDomains
-    echo -e "$greenOpen Finished Passive ASN Enumeration $colourClose"
+    if [ -z $asn ]; then
+        echo -e "$redOpen Starting Passive ASN Enumeration $colourClose"
+        amass intel -asn $asn | anew $topLevelDomains
+        echo -e "$greenOpen Finished Passive ASN Enumeration $colourClose"
+    else 
+        echo -e ""$redOpen No ASN Provided. Skipping ASN Enumeration $colourClose""
+    fi
 }
 
 subdomainEnum(){
     echo -e "$redOpen Starting Passive Subdomain Enumeration $colourClose"
+
+    if [ ! -s "$topLevelDomains" ]; then
+        echo "No Top Level Domains In topLevelDomains.txt"
+        echo "Quitting"
+        exit 1
+    fi
+
     while IFS= read -r domain; do
         echo -e "$redOpen Performing Passive Subdomain Enumeration On $domain $colourClose"
 
@@ -198,7 +214,6 @@ httpResolve(){
     echo -e "$greenOpen Finished Http Resolve $colourClose"
 }
 
-#Check this code. Will probably need to unfurl and httpx 
 crawl(){
     if [[ $mode == "active" ]]; then
         echo -e "$redOpen Starting Crawling Hosts For Subdomains $colourClose"
@@ -222,15 +237,23 @@ portScan(){
         echo -e "$redOpen Starting Port Scan With Masscan $colourClose"
         sudo masscan $cidr -p-
         echo -e "$greenOpen Finished Port Scan With Masscan $colourClose"
+    elif [[ -z $cidr ]]; then
+        echo -e "$redOpen No CIDR Provided. Skipping Port Scan $colourClose"
     fi
 }
 
 #Resolves domains with interesting ports rather than IP addresses
+#This will take a long time
 commonPortScan(){
     if [[ $mode == "active" ]]; then
-        echo -e "$redOpen Starting Common Http Port Scan $colourClose"
-        nmap -T4 -iL $subdomains --script=http-title --open -p $commonPorts -Pn 
-        echo -e "$greenOpen Finished Common Http Port Scan $colourClose"
+        cat $subdomains | httprobe -p http:8080 -p http:8000 -p http:8888 -p http:8081\
+         -p http:8008 -p http:8082 -p http:81 -p http:8083 -p http:82 -p http:8084 -p http:8001\
+          -p http:8090 -p http:83 -p http:8085 -p http:8088 -p http:8002 -p http:8089 -p http:84\
+           -p http:8091 -p http:85 -p http:8003 -p http:8092 -p http:8004 -p http:8093 -p http:86\
+            -p http:8094 -p http:8005 -p http:8095 -p http:8006 -p http:8096 -p http:8007 -p http:8097\
+             -p http:8009 -p http:8098 -p http:88 -p http:8099 -p http:8010 -p http:8100 -p http:8011\
+              -p http:8101 -p http:8012 -p http:8102 -p http:8013 -p http:8103 -p http:8014 -p http:8104\
+               -p https:8443 -p https:8080 -p https:8000 -p https:8888 -s | anew $hosts
     fi
 }
 
@@ -253,7 +276,7 @@ iisDiscovery(){
 }
 
 serviceScan(){
-    if [[ $mode == "active" ]]; then
+    if [[ -n $cidr && $mode == "active" ]]; then
         echo -e "$redOpen Starting Service Scan With Nmap $colourClose"
         nmapFormat="${cidr//,/' '}"
         nmap $nmapFormat -sV -T4 -F -oG $nmapOutput
@@ -262,6 +285,8 @@ serviceScan(){
         echo -e "$redOpen Starting Credential Spraying $colourClose"
         brutespray -f $nmapOutput -q
         echo -e "$greenOpen Finished Credential Spraying $colourClose"
+    elif [[ -z $cidr ]]; then
+        echo -e "$redOpen No CIDR Provided. Skipping Service Scan $colourClose"
     fi
 }
 
