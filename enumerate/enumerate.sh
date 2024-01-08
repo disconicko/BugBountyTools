@@ -23,8 +23,8 @@ main () {
     echo -e "$redOpen Starting Phase 1 - Enumeration on $target $colourClose"
     asnEnum
     subdomainEnum
-    githubEnum
-    wayBackUrls
+    #githubEnum
+    #wayBackUrls
     httpResolve
     crawl
     echo -e "$redOpen Finished Phase 1 - Enumeration on $target $colourClose"
@@ -60,7 +60,6 @@ initializeVariables(){
     fi
 
     outputDirectory=$output
-    target="Example Target"
     topLevelDomains="$outputDirectory/topLevelDomains.txt"
     subdomains="$outputDirectory/Enumeration/subDomains.txt"
     hosts="$outputDirectory/Enumeration/hosts.txt"
@@ -175,9 +174,9 @@ subdomainEnum(){
 
         #Custom Cert scraping
         echo -e "$redOpen Starting SSL Cert Enumeration $colourClose"
-        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | \
+        nuclei -l $subdomains -t ssl/ssl-dns-names.yaml -silent -rl $rateLimit | grep -oP '[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\.//' | \
             grep -f $topLevelDomains | anew $subdomains | httprobe | anew $hosts &\
-        nuclei -l $subdomains -t ssl/wildcard-tls.yaml -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\*\.//' | \
+        nuclei -l $subdomains -t ssl/wildcard-tls.yaml -rl $rateLimit -silent | grep -oP '\*\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' | sed 's/^\*\.//' | \
             anew $unconfirmedTopLevelDomains
         wait    
         echo -e "$greenOpen Finished Active Subddomain Enumeration $colourClose"
@@ -275,7 +274,7 @@ serviceScan(){
     if [[ -n $cidr && $mode == "active" ]]; then
         echo -e "$redOpen Starting Service Scan With Nmap $colourClose"
         nmapFormat="${cidr//,/' '}"
-        nmap $nmapFormat -sV -T4 -F -oG $nmapOutput
+        nmap $nmapFormat -sV -T4 -F -oG $nmapOutput  
         echo -e "$greenOpen Finished Service Scan With Nmap $colourClose"
 
         echo -e "$redOpen Starting Credential Spraying $colourClose"
