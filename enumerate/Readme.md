@@ -21,7 +21,7 @@ If these tools are not working in the command line, ensure that their binaries a
 ## Running
 Usage: 
 ```
-./enumerate.sh -a [ASN] -c [CIDR] -m [passive|active]
+./enumerate.sh -a [ASN] -c [CIDR] -m [passive|active] -o [output Directory]
 ```
 
 Modes:
@@ -43,7 +43,7 @@ The tool uses resources such as Wayback Machine, Whois, DNS Zone Transfers, cert
 
 ## TODO
 * Organise output into sorted folders **DONE**
-* Add checks against known in-scope top level domains to avoid falling out of scope.
+* Add checks against known in-scope top level domains to avoid falling out of scope. **DONE** 
 * Add checks to resolve hosts to their IP. Check IP against in range CIDR to avoid falling out of scope. 
 * Add Github Dorking tool. **DONE**
 * Add certificate scraping for subdomains. **DONE** 
